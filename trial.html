@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Info</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      font-size: 1.8em;
+      background-color: #f0f0f0;
+    }
+    #message {
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="message">Loading student data...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB32F9MwFTvMBfbL28Dsn1g9JtYgXfGS4o",
+      authDomain: "qr-trial-63a4c.firebaseapp.com",
+      projectId: "qr-trial-63a4c",
+      storageBucket: "qr-trial-63a4c.appspot.com",
+      messagingSenderId: "372132870045",
+      appId: "1:372132870045:web:bc4782c63d21cf27f8e174",
+      measurementId: "G-KTXCEZB9SS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const messageDiv = document.getElementById('message');
+    const params = new URLSearchParams(window.location.search);
+    const studentId = params.get('id');
+
+    if (!studentId) {
+      messageDiv.textContent = "⚠️ No student ID provided in the URL.";
+      messageDiv.classList.add("error");
+    } else {
+      const docRef = doc(db, "students", studentId);
+      getDoc(docRef)
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const name = data.name || "Unknown";
+            const idNumber = data.id || studentId;
+            const status = data.status || "Unknown";
+
+            messageDiv.innerHTML = `
+              Name: ${name}<br>
+              ID Number: ${idNumber}<br>
+              Status: ${status}
+            `;
+          } else {
+            messageDiv.textContent = `❌ Student with ID "${studentId}" not found.`;
+            messageDiv.classList.add("error");
+          }
+        })
+        .catch((error) => {
+          console.error("🔥 Firestore error:", error);
+          messageDiv.innerHTML = `⚠️ Error fetching data.<br><small>${error.message}</small>`;
+          messageDiv.classList.add("error");
+        });
+    }
+  </script>
+</body>
+</html>
